@@ -2,47 +2,95 @@ import "./App.css";
 import { useState } from "react";
 
 function App() {
-  const [searchBarShown, setSearchBarShown] = useState(false);
+  const [activeActivity, setActiveActivity] = useState(null);
 
-  const handleClick = () => {
-    setSearchBarShown((prev) => !prev);
+  const [getThingToDo, setGetThingToDo] = useState();
+
+  const handleAPICall = async (e) => {
+    e.preventDefault();
+
+    let url = activeActivity
+      ? `http://www.boredapi.com/api/activity?type=${activeActivity}`
+      : `http://www.boredapi.com/api/activity/`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+    setGetThingToDo(data);
+    console.log(data);
   };
   return (
     <div className="App">
-      <Header searchBarShown={searchBarShown} onClick={handleClick} />
+      <Header
+        activeActivity={activeActivity}
+        setActiveActivity={setActiveActivity}
+        onSubmit={handleAPICall}
+      />
     </div>
   );
 }
 
-function Header({ onClick, searchBarShown }) {
+function Header({ activeActivity, setActiveActivity, onSubmit }) {
+  const [activityBarShown, setActivityBarShown] = useState(false);
+
+  const handleClick = () => {
+    setActivityBarShown((prev) => !prev);
+  };
+
+  const handleChange = ({ target }) => {
+    setActiveActivity(target.value);
+  };
   return (
     <div>
-      <h1>This Or That</h1>
-      <NavBar onClick={onClick} searchBarShown={searchBarShown} />
+      <h1>What should I Do?</h1>
+      <NavBar onClick={handleClick} activityBarShown={activityBarShown} />
       <hr />
-      {searchBarShown && <SearchBar />}
+      <form onSubmit={onSubmit}>
+        {activityBarShown && (
+          <ActivityType
+            onChange={handleChange}
+            activeActivity={activeActivity}
+          />
+        )}
+        <input type="submit" />
+      </form>
     </div>
   );
 }
 
-function NavBar({ onClick, searchBarShown }) {
+function NavBar({ onClick, activityBarShown }) {
   return (
     <nav className="nav-bar">
-      <button>Remove Placeholder1</button>
       <button onClick={onClick}>
-        {!searchBarShown ? "Show" : "Hide"} Search Bar
+        {!activityBarShown ? "Show" : "Hide"} ActivityType
       </button>
       <button>Reset</button>
-      <button>Remove Placeholder2</button>
     </nav>
   );
 }
 
-function SearchBar() {
+function ActivityType({ activeActivity, onChange }) {
+  let activityArr = [
+    "",
+    "charity",
+    "cooking",
+    "music",
+    "diy",
+    "education",
+    "social",
+    "busywork",
+    "recreational",
+    "relaxation",
+  ];
   return (
     <div className="input-bars">
-      <input id="item1" />
-      <input id="item2" />
+      <select id="Activity" onChange={onChange} defaultValue={activeActivity}>
+        {activityArr.map((activity, i) => (
+          <option key={activity + i} value={activity}>
+            {" "}
+            {activity}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
